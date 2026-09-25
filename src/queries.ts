@@ -46,7 +46,7 @@ export function findLateArrivals(
 
 export function repeatLateArrivals(
   db: DatabaseSync,
-  p: Range & { location: string | null; graceMinutes: number; minTimesLate: number },
+  p: Range & { location: string | null; graceMinutes: number; minTimesLate: number; limit: number },
 ) {
   return db
     .prepare(`
@@ -62,7 +62,8 @@ export function repeatLateArrivals(
       WHERE ${IN_RANGE} AND ${AT_LOCATION}
       GROUP BY e.id
       HAVING times_late >= :minTimesLate
-      ORDER BY times_late DESC, late_rate_pct DESC`)
+      ORDER BY times_late DESC, late_rate_pct DESC
+      LIMIT :limit`)
     .all(p);
 }
 
@@ -72,7 +73,7 @@ export function locationNames(db: DatabaseSync): string[] {
 
 export function repeatMissingClockEvents(
   db: DatabaseSync,
-  p: Range & { location: string | null; minTimes: number },
+  p: Range & { location: string | null; minTimes: number; limit: number },
 ) {
   return db
     .prepare(`
@@ -89,7 +90,8 @@ export function repeatMissingClockEvents(
       WHERE ${IN_RANGE} AND ${AT_LOCATION}
       GROUP BY e.id
       HAVING no_shows >= :minTimes OR missed_clock_outs >= :minTimes
-      ORDER BY no_shows + missed_clock_outs DESC`)
+      ORDER BY no_shows + missed_clock_outs DESC
+      LIMIT :limit`)
     .all(p);
 }
 
@@ -102,7 +104,8 @@ export function findEmployees(db: DatabaseSync, query: string) {
       SELECT e.id, e.name, e.role, l.name AS location
       FROM employees e JOIN locations l ON l.id = e.location_id
       WHERE e.id = :asId OR e.name LIKE '%' || :literal || '%' ESCAPE '\\'
-      ORDER BY e.name`)
+      ORDER BY e.name
+      LIMIT 20`)
     .all({ asId, literal }) as { id: number; name: string; role: string; location: string }[];
 }
 

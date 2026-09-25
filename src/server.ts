@@ -83,17 +83,18 @@ export function createServer(db: DatabaseSync): McpServer {
       location,
       grace_minutes: grace,
       min_times_late: z.number().int().min(1).max(100).default(3),
+      limit: z.number().int().min(1).max(200).default(50),
     },
     annotations: READ_ONLY,
   }, async (a) => {
     const sc = scope(a);
     if (!sc.ok) return error(sc.message);
-    return json(q.repeatLateArrivals(db, { ...rangeOf(sc), location: sc.location, graceMinutes: a.grace_minutes, minTimesLate: a.min_times_late }));
+    return json(q.repeatLateArrivals(db, { ...rangeOf(sc), location: sc.location, graceMinutes: a.grace_minutes, minTimesLate: a.min_times_late, limit: a.limit }));
   });
 
   server.registerTool("employee_attendance", {
     title: "Employee attendance",
-    description: "Attendance summary and incident list (late, no-show, missed clock-out) for one employee. Accepts an employee ID or part of a name; if several people match, returns the candidates instead.",
+    description: "Attendance summary and incident list (late, no-show, missed clock-out) for one employee. Accepts an employee ID or part of a name; if several people match, returns up to 20 candidates instead.",
     inputSchema: {
       employee: z.string().min(1).max(80).describe("Employee ID or part of their name."),
       ...range,
@@ -153,12 +154,13 @@ export function createServer(db: DatabaseSync): McpServer {
       location,
       min_times: z.number().int().min(1).max(100).default(3)
         .describe("Include people with at least this many no-shows or at least this many missed clock-outs."),
+      limit: z.number().int().min(1).max(200).default(50),
     },
     annotations: READ_ONLY,
   }, async (a) => {
     const sc = scope(a);
     if (!sc.ok) return error(sc.message);
-    return json(q.repeatMissingClockEvents(db, { ...rangeOf(sc), location: sc.location, minTimes: a.min_times }));
+    return json(q.repeatMissingClockEvents(db, { ...rangeOf(sc), location: sc.location, minTimes: a.min_times, limit: a.limit }));
   });
 
   server.registerResource("schema", "attendance://schema", {
@@ -172,7 +174,7 @@ export function createServer(db: DatabaseSync): McpServer {
     description: "Review one week of attendance for a site (or all sites) and draft a short manager summary.",
     argsSchema: {
       week_start: date.describe("Monday of the week to review (YYYY-MM-DD)."),
-      location: z.string().max(50).optional(),
+      location: z.enum(sites as [string, ...string[]]).optional(),
     },
   }, ({ week_start, location }) => ({
     messages: [{

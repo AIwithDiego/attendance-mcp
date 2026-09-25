@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
 // Synthetic data only. Every name, shift and clock event is generated here
@@ -52,22 +53,31 @@ function addMinutes(date: string, time: string, minutes: number): string {
 }
 
 export function createDatabase(path = ":memory:"): DatabaseSync {
+  // An existing file is opened read-only and never seeded, so pointing ATTENDANCE_DB
+  // at a database can't add tables or rows to it. Only a new file gets created and seeded.
+  if (path !== ":memory:" && existsSync(path)) {
+    const db = new DatabaseSync(path, { readOnly: true });
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[];
+    const missing = ["locations", "employees", "shifts", "clock_events"].filter((t) => !tables.some((r) => r.name === t));
+    if (missing.length > 0) throw new Error(`${path} is missing tables: ${missing.join(", ")}`);
+    return db;
+  }
   const db = new DatabaseSync(path);
   db.exec(`
-    CREATE TABLE IF NOT EXISTS locations (
+    CREATE TABLE locations (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
       country TEXT NOT NULL,
       timezone TEXT NOT NULL
     );
-    CREATE TABLE IF NOT EXISTS employees (
+    CREATE TABLE employees (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       role TEXT NOT NULL,
       location_id INTEGER NOT NULL REFERENCES locations(id)
     );
     -- Times are local to the location, as 'YYYY-MM-DD HH:MM'.
-    CREATE TABLE IF NOT EXISTS shifts (
+    CREATE TABLE shifts (
       id INTEGER PRIMARY KEY,
       employee_id INTEGER NOT NULL REFERENCES employees(id),
       location_id INTEGER NOT NULL REFERENCES locations(id),
@@ -75,15 +85,14 @@ export function createDatabase(path = ":memory:"): DatabaseSync {
       scheduled_end TEXT NOT NULL
     );
     -- No row for a shift = no-show. clock_out NULL = missed clock-out.
-    CREATE TABLE IF NOT EXISTS clock_events (
+    CREATE TABLE clock_events (
       shift_id INTEGER PRIMARY KEY REFERENCES shifts(id),
       clock_in TEXT NOT NULL,
       clock_out TEXT
     );
   `);
 
-  const alreadySeeded = db.prepare("SELECT COUNT(*) AS n FROM locations").get() as { n: number };
-  if (alreadySeeded.n === 0) seed(db);
+  seed(db);
   return db;
 }
 

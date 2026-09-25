@@ -1,5 +1,7 @@
 # Attendance MCP: live test session, run 2 (2026-09-25)
 
+> Historical log, kept as written. Tool counts and line numbers refer to the code at the time of the session; see the Fixes section at the end for what changed.
+
 Second live session against the running `attendance` MCP server, after the fixes from [run 1](test-session-2026-09-25.md). Same seeded data: 2026-07-27 to 2026-09-20, 4 sites × 10 staff, 1,600 scheduled shifts.
 
 **87 tool calls** across all seven tools, in four blocks: regression of run 1, the new ranking tool, a site × parameter sweep, and edge cases plus realistic manager questions. Unit suite: 18/18 passing.

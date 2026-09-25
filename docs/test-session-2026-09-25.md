@@ -1,5 +1,7 @@
 # Attendance MCP: live test session, 2026-09-25
 
+> Historical log, kept as written. Tool counts and line numbers refer to the code at the time of the session; see the Fixes section at the end for what changed.
+
 Tested from a Claude Code session against the running `attendance` MCP server (the stdio server in this folder, seeded data 2026-07-27 to 2026-09-20, 4 sites × 10 staff). All six tools were called for real. Three bugs are confirmed against the source.
 
 ## Verdict

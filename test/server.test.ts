@@ -211,3 +211,33 @@ function mostCommon(xs: string[]): string | undefined {
   for (const x of xs) counts.set(x, (counts.get(x) ?? 0) + 1);
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 }
+
+// From the security review: an existing ATTENDANCE_DB file is opened read-only and never seeded.
+describe("ATTENDANCE_DB", () => {
+  it("creates and seeds a new file, then reopens it read-only", async () => {
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const path = join(mkdtempSync(join(tmpdir(), "attendance-")), "data.db");
+
+    createDatabase(path).close();
+    const reopened = createDatabase(path);
+    expect((reopened.prepare("SELECT COUNT(*) AS n FROM employees").get() as { n: number }).n).toBe(40);
+    expect(() => reopened.exec("DELETE FROM employees")).toThrow();
+  });
+
+  it("refuses an existing database that isn't an attendance database, without touching it", async () => {
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { DatabaseSync } = await import("node:sqlite");
+    const path = join(mkdtempSync(join(tmpdir(), "attendance-")), "other.db");
+    const other = new DatabaseSync(path);
+    other.exec("CREATE TABLE notes (body TEXT)");
+    other.close();
+
+    expect(() => createDatabase(path)).toThrow(/missing tables/);
+    const check = new DatabaseSync(path);
+    expect(check.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all()).toEqual([{ name: "notes" }]);
+  });
+});
