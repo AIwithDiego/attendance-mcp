@@ -18,7 +18,8 @@
     "start": "node --disable-warning=ExperimentalWarning dist/index.js",
     "inspect": "mcp-inspector tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sample": "node scripts/sample-analysis.mjs"
   },
   "license": "MIT",
   "dependencies": {
