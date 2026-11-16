@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!-- Source of the two README screenshots. The calls and responses are the real output of the built server over stdio
+     (captured with the MCP SDK client, same seed as docs/sample-analysis.md), pasted in verbatim (the ambiguous-name JSON is compacted to one line per candidate). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#08130f;--card:#0e1f18;--line:#23392f;--cream:#f6ecd6;--dim:#9fb3a7;--faint:#6f8579;--green:#4bd68f;--amber:#f2b441;--red:#ff5f4a}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);font-family:"Space Grotesk",sans-serif;color:var(--cream)}
+.shot{width:640px;height:560px;padding:32px;background:radial-gradient(500px 300px at 0% 0%, rgba(75,214,143,.10), transparent 70%),var(--bg);display:none}
+.k{font:700 13px "JetBrains Mono";letter-spacing:.1em;text-transform:uppercase;color:var(--green)}
+h2{font:700 28px/1.15 "Space Grotesk";margin:8px 0 20px}
+.call{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;font:400 13.5px/1.5 "JetBrains Mono";color:var(--dim)}
+.req{color:var(--cream);font-weight:500}.p{color:var(--green)}.a{color:var(--faint)}
+.st{margin:6px 0 8px;font-size:12px}.err{color:var(--amber)}.ok{color:var(--green)}
+pre{white-space:pre-wrap;color:var(--cream);font:400 13.5px/1.45 "JetBrains Mono"}
+.compact pre{font-size:11.5px;line-height:1.5}
+</style></head><body><div class="shot" id="errors"><div class="k">Ask wrong, get told</div><h2>A bad input is an error that says what's valid, never an empty list</h2><div class="call"><div class="req"><span class="p">→</span> find_late_arrivals <span class="a">{&quot;location&quot;: &quot;Narnia&quot;}</span></div><div class="st"><span class="err">isError: true</span></div><pre>Unknown location &quot;Narnia&quot;. Valid locations: Belfast, Cork, Dublin, Manchester.</pre></div><div class="call"><div class="req"><span class="p">→</span> repeat_late_arrivals <span class="a">{&quot;from&quot;: &quot;2026-09-20&quot;, &quot;to&quot;: &quot;2026-07-27&quot;}</span></div><div class="st"><span class="err">isError: true</span></div><pre>&quot;from&quot; (2026-09-20) is after &quot;to&quot; (2026-07-27).</pre></div></div><div class="shot compact" id="ambiguous"><div class="k">Ambiguous name</div><h2>Four people match "Brennan", so it asks back</h2><div class="call"><div class="req"><span class="p">→</span> employee_attendance <span class="a">{&quot;employee&quot;: &quot;Brennan&quot;}</span></div><div class="st"><span class="ok">isError: false</span></div><pre>{
+  &quot;ambiguous&quot;: true,
+  &quot;message&quot;: &quot;Several employees match. Ask which one, then call again with their ID.&quot;,
+  &quot;candidates&quot;: [
+    {&quot;id&quot;: 28, &quot;name&quot;: &quot;Aoife Brennan&quot;, &quot;role&quot;: &quot;Floor staff&quot;, &quot;location&quot;: &quot;Manchester&quot;},
+    {&quot;id&quot;: 32, &quot;name&quot;: &quot;Dan Brennan&quot;, &quot;role&quot;: &quot;Kitchen&quot;, &quot;location&quot;: &quot;Belfast&quot;},
+    {&quot;id&quot;: 25, &quot;name&quot;: &quot;Sofia Brennan&quot;, &quot;role&quot;: &quot;Supervisor&quot;, &quot;location&quot;: &quot;Manchester&quot;},
+    {&quot;id&quot;: 11, &quot;name&quot;: &quot;Tom Brennan&quot;, &quot;role&quot;: &quot;Supervisor&quot;, &quot;location&quot;: &quot;Cork&quot;}
+  ]
+}</pre></div></div><script>const id=location.hash.slice(1);document.getElementById(id).style.display="block"</script></body></html>
